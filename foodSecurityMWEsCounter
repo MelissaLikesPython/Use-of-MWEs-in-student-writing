@@ -1,0 +1,60 @@
+#! /usr/bin/env python3
+
+'''This program searches all plain text files in a folder for a word, phrase or set of words and phrases.
+It generates a count of each unique item in the set, plus total types and tokens.
+Results are saved to a file.'''
+
+from pathlib import Path
+import os, re, sys, json
+
+# This function prints total types, total tokens, and a count for each unique item in a list.
+def typesTokensCount(myList):
+
+    count = {} # Creates dictionary to hold the count data.
+
+    for i in myList:
+        count.setdefault(i, 0) # Creates key in dictionary for each unique item in list, with default value of 0.
+        count[i] = count[i] + 1 # Adds 1 to count for each occurence of item type.
+
+    resultsFile.write('\nTypes: ' + str(len(count)) + '\n') # Prints length of dictionary (e.g. number of types)
+    resultsFile.write('Tokens: ' + str(len(myList)) + '\n') # Prints length of list (e.g. number of tokens)
+    resultsFile.write(json.dumps(count) + '\n\n') # Prints dictionary (e.g. count for each type)
+
+# Edit this regex to find relevant words and phrases. Use pipe to separate multiple items.
+myRegex = re.compile(r'''safe\ and\ nutritious\ food|level\ of\ food\ security|current\ food\ consumption\ pattern|affordability\ of\ healthy\ diets|
+land\ sparing\ vs\ sharing|food\ security\ and\ nutrition|cost\ of\ nutritious\ food|have\ a\ duty\ to|right\ to\ food|food\ consumption\ pattern
+|level\ of\ food|include\ sustainability\ considerations|animal\ source\ food|fruits\ and\ vegetables|access\ to\ food|cost\ and\ affordability|
+number\ of\ undernourished|global\ food\ security|moderate\ or\ severe|billion\ people|million\ people|covid-19\ pandemic|food\ security|
+healthy\ diet|food\ production|food\ insecurity|nutritious\ food|food\ system|climate\ change|land\ sparing|animal\ protein|food\ suppl
+|ecosystem\ services|human\ health|biodiversity\ loss|diet\ quality|environmental\ impact|developing\ countr|livestock\ production
+|food\ consumption|nitrogen\ cycle|functional\ biodiversity|food\ secure|agricultural\ intensification|food\ sustainability|food\ price
+|undernourished\ people|carbon\ cycle|land\ sharing|cycle\ disruption|dietary\ pattern|food\ market|world\ population|environmental\ cost
+|biodiversity\ conservation|hungry\ people|high-income\ country|international\ community|conventional\ intensification|consumption\ pattern
+|lower-middle-income\ countr|meat\ consumption|diet\ pattern|diet\ transition|population\ growth|plant\ protein|food\ availability
+|protein\ production|food\ group|sustainability\ considerations|agricultural\ landscape''', re.VERBOSE|re.IGNORECASE)
+
+# Edit this file path to save results in different location.
+resultsFile = open(Path.home() / 'results.txt', 'a')
+
+# Prompts user to input file path for corpus data (plain text files only).
+path = input('Please enter your chosen folder with file path:\n')
+
+# Checks that file path is valid.
+while True:
+    if os.path.exists(path) == True:
+        break
+    else:
+        print('Sorry, I can\'t find this file path.')
+        sys.exit()
+
+fileList = os.listdir(path)
+for file in fileList:
+    if file.endswith('.txt'): # Opens and reads all files in folder with .txt extension.
+        resultsFile.write(os.path.join(path, file)) # Prints name and location of file.
+        content = open(os.path.join(path, file), 'r')
+        text = content.read().lower() # Converts text to lowercase to avoid duplication in type count.
+        result = myRegex.findall(text) # Creates a list of all words or phrases matching regex.
+        typesTokensCount(result)
+
+resultsFile.close()
+print('Done.')
